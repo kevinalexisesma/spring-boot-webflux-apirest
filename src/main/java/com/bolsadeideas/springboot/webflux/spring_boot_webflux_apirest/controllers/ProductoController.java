@@ -1,5 +1,6 @@
 package com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.controllers;
 
+import java.beans.Beans;
 import java.net.URI;
 import java.util.Date;
 
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -56,4 +58,17 @@ public class ProductoController {
                 .defaultIfEmpty(ResponseEntity.badRequest().build());
     }
 
+    @PutMapping("/{id}")
+    public Mono<ResponseEntity<Producto>> editar(@RequestBody Producto producto, @PathVariable String id) {
+        return productoService.findById(id).flatMap(p -> {
+            p.setNombre(producto.getNombre());
+            p.setPrecio(producto.getPrecio());
+            p.setCategoria(producto.getCategoria());
+            return productoService.save(p);
+        })
+                .map(p -> ResponseEntity.created(URI.create("api/productos/".concat(p.getId())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(p))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }
