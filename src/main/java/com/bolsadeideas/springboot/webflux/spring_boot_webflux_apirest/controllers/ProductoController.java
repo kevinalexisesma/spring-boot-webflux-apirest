@@ -13,6 +13,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -27,6 +29,15 @@ public class ProductoController {
                 ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(productoService.findAll()));
+    }
+
+    @GetMapping("/{id}")
+    public Mono<ResponseEntity<Producto>> editar(@PathVariable String id) {
+        return productoService.findById(id)
+                .map(producto -> ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(producto))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
 }
