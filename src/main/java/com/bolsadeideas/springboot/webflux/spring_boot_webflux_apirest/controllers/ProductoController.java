@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -104,8 +103,8 @@ public class ProductoController {
                         respuesta.put("mensaje", "Producto creado con éxito.");
                         respuesta.put("timestamp", new Date());
                         return ResponseEntity.created(URI.create("api/productos/".concat(p.getId())))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .body(respuesta);
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(respuesta);
                     })
                     .defaultIfEmpty(ResponseEntity.badRequest().build());
         })
