@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.documents.Categoria;
 import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.documents.Producto;
 import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.service.ProductoService;
 
@@ -62,5 +63,46 @@ class SpringBootWebfluxApirestApplicationTests {
 				});
 		// .jsonPath("$.id").isNotEmpty()
 		// .jsonPath("$.nombre").isEqualTo("TV Panasonic Pantalla LCD");
+	}
+
+	@Test
+	void crearTest() {
+
+		Categoria cateoria = productoService.findCategoriaByNombre("Muebles").block();
+
+		Producto producto = new Producto("Mesa Comedor", 100.00, cateoria);
+		client.post().uri("/api/v2/productos")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.body(Mono.just(producto), Producto.class)
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody()
+				.jsonPath("$.id").isNotEmpty()
+				.jsonPath("$.nombre").isEqualTo("Mesa Comedor")
+				.jsonPath("$.categoria.nombre").isEqualTo("Muebles");
+	}
+
+	@Test
+	void crear2Test() {
+
+		Categoria cateoria = productoService.findCategoriaByNombre("Muebles").block();
+
+		Producto producto = new Producto("Mesa Comedor", 100.00, cateoria);
+		client.post().uri("/api/v2/productos")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.body(Mono.just(producto), Producto.class)
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody(Producto.class)
+				.consumeWith(response -> {
+					Producto productoResponse = response.getResponseBody();
+					Assertions.assertThat(productoResponse.getId()).isNotEmpty();					
+					Assertions.assertThat(productoResponse.getNombre()).isEqualTo("Mesa Comedor");
+					Assertions.assertThat(productoResponse.getCategoria().getNombre()).isEqualTo("Muebles");
+				});
 	}
 }
