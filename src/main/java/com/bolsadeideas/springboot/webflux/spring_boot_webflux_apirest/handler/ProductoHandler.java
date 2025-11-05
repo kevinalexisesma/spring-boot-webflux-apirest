@@ -1,7 +1,9 @@
 package com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -11,8 +13,10 @@ import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.se
 
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 
 import reactor.core.publisher.Mono;
 
@@ -21,6 +25,29 @@ public class ProductoHandler {
 
     @Autowired
     private ProductoService productoService;
+
+    @Value("${config.uploads.path}")
+    private String path;
+
+    public Mono<ServerResponse> upload(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return request.multipartData().map(multiPart -> multiPart.toSingleValueMap().get("file"))
+                .cast(FilePart.class)
+                .flatMap(file -> productoService.findById(id)
+                        .flatMap(p -> {
+                            p.setFoto(UUID.randomUUID() + "-" + file.filename()
+                                    .replace(" ", "")
+                                    .replace(":", "")
+                                    .replace("\\", ""));
+                            return file.transferTo(new File(path + p.getFoto()))
+                                    .then(productoService.save(p));
+                        }))
+                .flatMap(p -> ServerResponse
+                        .created(URI.create("api/v2/productos/" + p.getId()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(fromValue(p)))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
 
     public Mono<ServerResponse> listar(ServerRequest request) {
         return ServerResponse.ok()
