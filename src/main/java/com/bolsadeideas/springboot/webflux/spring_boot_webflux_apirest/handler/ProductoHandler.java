@@ -11,6 +11,9 @@ import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.se
 
 import static org.springframework.web.reactive.function.BodyInserters.*;
 
+import java.net.URI;
+import java.util.Date;
+
 import reactor.core.publisher.Mono;
 
 @Component
@@ -31,5 +34,17 @@ public class ProductoHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(fromValue(p)))
                 .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> crear(ServerRequest request) {
+        Mono<Producto> producto = request.bodyToMono(Producto.class);
+        return producto.flatMap(p -> {
+            if (p.getCreateAt() == null)
+                p.setCreateAt(new Date());
+            return productoService.save(p);
+        }).flatMap(p -> ServerResponse
+                .created(URI.create("api/v2/productos/" + p.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(fromValue(p)));
     }
 }

@@ -16,7 +16,8 @@ public class RouterFunctionConfig {
     @Bean
     public RouterFunction<ServerResponse> routes(ProductoHandler handler) {
         return route(GET("/api/v2/productos").or(GET("/api/v3/productos")), handler::listar)
-                .andRoute(GET("/api/v2/productos/{id}"), handler::ver);
+                .andRoute(GET("/api/v2/productos/{id}"), handler::ver)
+                .andRoute(POST("api/v2/productos"), handler::crear);
     }
 
 }
