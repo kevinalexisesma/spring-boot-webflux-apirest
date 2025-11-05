@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.documents.Producto;
 import com.bolsadeideas.springboot.webflux.spring_boot_webflux_apirest.models.service.ProductoService;
 
+import static org.springframework.web.reactive.function.BodyInserters.*;
+
 import reactor.core.publisher.Mono;
 
 @Component
@@ -21,5 +23,13 @@ public class ProductoHandler {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(productoService.findAll(), Producto.class);
+    }
+
+    public Mono<ServerResponse> ver(ServerRequest request) {
+        String id = request.pathVariable("id");
+        return productoService.findById(id).flatMap(p -> ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(fromValue(p)))
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 }
