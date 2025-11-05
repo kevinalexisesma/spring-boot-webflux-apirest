@@ -47,4 +47,20 @@ public class ProductoHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(fromValue(p)));
     }
+
+    public Mono<ServerResponse> editar(ServerRequest request) {
+        Mono<Producto> producto = request.bodyToMono(Producto.class);
+        String id = request.pathVariable("id");
+        Mono<Producto> productoBd = productoService.findById(id);
+        return productoBd.zipWith(producto, (db, req) -> {
+            db.setNombre(req.getNombre());
+            db.setPrecio(req.getPrecio());
+            db.setCategoria(req.getCategoria());
+            return db;
+        }).flatMap(p -> ServerResponse
+                .created(URI.create("api/v2/productos/" + p.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(productoService.save(p), Producto.class))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
 }
