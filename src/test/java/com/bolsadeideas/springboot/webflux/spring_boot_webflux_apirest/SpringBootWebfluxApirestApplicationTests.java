@@ -100,9 +100,36 @@ class SpringBootWebfluxApirestApplicationTests {
 				.expectBody(Producto.class)
 				.consumeWith(response -> {
 					Producto productoResponse = response.getResponseBody();
-					Assertions.assertThat(productoResponse.getId()).isNotEmpty();					
+					Assertions.assertThat(productoResponse.getId()).isNotEmpty();
 					Assertions.assertThat(productoResponse.getNombre()).isEqualTo("Mesa Comedor");
 					Assertions.assertThat(productoResponse.getCategoria().getNombre()).isEqualTo("Muebles");
 				});
+	}
+
+	@Test
+	void editarTest() {
+		Producto producto = productoService.findByNombre("Sony Notebook").block();
+
+		Categoria cateoriaEditada = productoService.findCategoriaByNombre("Electrónico").block();
+		Producto productoEditado = new Producto("Asus Notebook", 700.00, cateoriaEditada);
+
+		client.put().uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.body(Mono.just(productoEditado), Producto.class)
+				.exchange()
+				.expectStatus().isCreated()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody()
+				.jsonPath("$.id").isNotEmpty()
+				.jsonPath("$.nombre").isEqualTo("Asus Notebook")
+				.jsonPath("$.categoria.nombre").isEqualTo("Electrónico");
+		// .consumeWith(response -> {
+		// Producto productoResponse = response.getResponseBody();
+		// Assertions.assertThat(productoResponse.getId()).isNotEmpty();
+		// Assertions.assertThat(productoResponse.getNombre()).isEqualTo("Asus
+		// Notebook");
+		// Assertions.assertThat(productoResponse.getCategoria().getNombre()).isEqualTo("Electrónico");
+		// });
 	}
 }
