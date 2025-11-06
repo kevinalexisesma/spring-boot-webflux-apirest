@@ -132,4 +132,21 @@ class SpringBootWebfluxApirestApplicationTests {
 		// Assertions.assertThat(productoResponse.getCategoria().getNombre()).isEqualTo("Electrónico");
 		// });
 	}
+
+	@Test
+	void eliminar() {
+		Producto producto = productoService.findByNombre("Mica Cómoda 5 Cajones").block();
+
+		client.delete()
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.exchange()
+				.expectStatus().isNoContent()
+				.expectBody().isEmpty();
+
+		client.get()
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.exchange()
+				.expectStatus().isNotFound()
+				.expectBody().isEmpty();
+	}
 }
